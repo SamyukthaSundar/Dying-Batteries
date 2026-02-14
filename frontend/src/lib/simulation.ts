@@ -22,6 +22,13 @@ export interface OptimizedResult {
   energyReduction: number; // %
   co2Reduction: number; // %
   greenScore: number; // 0-100
+  explanation?: Record<string, number>; // SHAP values {traffic, cpu, memory}
+}
+
+export interface ExplanationResponse {
+  feature_importance: Record<string, number>;
+  utilization_explanation: Record<string, number>;
+  optimal_cpu_explanation: Record<string, number>;
 }
 
 export interface WorkloadPrediction {
@@ -87,4 +94,8 @@ export async function optimizeAsync(config: WorkloadConfig): Promise<OptimizedRe
 
 export async function predictWorkloadAsync(config: WorkloadConfig): Promise<WorkloadPrediction[]> {
   return postJson<WorkloadPrediction[]>("/api/predict", config);
+}
+
+export async function explainAsync(config: WorkloadConfig): Promise<ExplanationResponse> {
+  return postJson<ExplanationResponse>("/api/explain", config);
 }
