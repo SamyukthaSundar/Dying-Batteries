@@ -4,3 +4,5 @@ numpy
 joblib
 fastapi
 uvicorn[standard]
+prophet 
+shap
