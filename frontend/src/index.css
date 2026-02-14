@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 160 20% 4%;
+    --foreground: 145 10% 90%;
+
+    --card: 160 15% 7%;
+    --card-foreground: 145 10% 90%;
+
+    --popover: 160 15% 7%;
+    --popover-foreground: 145 10% 90%;
+
+    --primary: 152 76% 44%;
+    --primary-foreground: 160 20% 4%;
+
+    --secondary: 160 12% 12%;
+    --secondary-foreground: 145 10% 80%;
+
+    --muted: 160 10% 10%;
+    --muted-foreground: 155 8% 50%;
+
+    --accent: 82 85% 55%;
+    --accent-foreground: 160 20% 4%;
+
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 160 12% 14%;
+    --input: 160 12% 14%;
+    --ring: 152 76% 44%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 160 15% 6%;
+    --sidebar-foreground: 145 10% 90%;
+    --sidebar-primary: 152 76% 44%;
+    --sidebar-primary-foreground: 160 20% 4%;
+    --sidebar-accent: 160 12% 12%;
+    --sidebar-accent-foreground: 145 10% 80%;
+    --sidebar-border: 160 12% 14%;
+    --sidebar-ring: 152 76% 44%;
+
+    /* Custom tokens */
+    --success: 152 76% 44%;
+    --success-foreground: 160 20% 4%;
+    --warning: 45 93% 47%;
+    --warning-foreground: 160 20% 4%;
+    --glow-primary: 0 0 30px hsl(152 76% 44% / 0.3);
+    --glow-accent: 0 0 30px hsl(82 85% 55% / 0.2);
+    --gradient-eco: linear-gradient(135deg, hsl(152 76% 44%), hsl(82 85% 55%));
+    --gradient-dark: linear-gradient(180deg, hsl(160 20% 4%), hsl(160 15% 7%));
+    --gradient-card: linear-gradient(135deg, hsl(160 15% 7%), hsl(160 12% 10%));
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .eco-gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-eco);
+  }
+
+  .eco-glow {
+    box-shadow: var(--glow-primary);
+  }
+
+  .eco-card {
+    background: var(--gradient-card);
+    @apply border border-border rounded-xl;
+  }
+
+  .eco-meter {
+    background: conic-gradient(
+      hsl(var(--primary)) var(--meter-value, 0%),
+      hsl(var(--muted)) var(--meter-value, 0%)
+    );
+  }
+}
