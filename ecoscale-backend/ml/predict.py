@@ -8,15 +8,16 @@ import joblib
 import os
 
 
-UTIL_MODEL_PATH = "models/utilization_model.pkl"
-OPT_MODEL_PATH = "models/optimization_model.pkl"
+BASE_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
+UTIL_MODEL_PATH = os.path.join(BASE_DIR, "models", "utilization_model.pkl")
+OPT_MODEL_PATH = os.path.join(BASE_DIR, "models", "optimization_model.pkl")
 
 
 if not os.path.exists(UTIL_MODEL_PATH):
-    raise FileNotFoundError("Utilization model not found. Train it first.")
+    raise FileNotFoundError(f"Utilization model not found at {UTIL_MODEL_PATH}. Train it first.")
 
 if not os.path.exists(OPT_MODEL_PATH):
-    raise FileNotFoundError("Optimization model not found. Train it first.")
+    raise FileNotFoundError(f"Optimization model not found at {OPT_MODEL_PATH}. Train it first.")
 
 
 util_model = joblib.load(UTIL_MODEL_PATH)
