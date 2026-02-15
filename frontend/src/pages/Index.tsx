@@ -6,6 +6,7 @@ import WorkloadPredictionChart from "@/components/WorkloadPredictionChart";
 import EnergySimulation from "@/components/EnergySimulation";
 import OptimizationPanel from "@/components/OptimizationPanel";
 import BeforeAfterDashboard from "@/components/BeforeAfterDashboard";
+import { generateSummaryPdf } from "@/lib/pdf";
 import {
   type WorkloadConfig,
   type SimulationResult,
@@ -22,6 +23,7 @@ const Index = () => {
   const [optimized, setOptimized] = useState<OptimizedResult | null>(null);
   const [predictions, setPredictions] = useState<WorkloadPrediction[]>([]);
   const [backendSource, setBackendSource] = useState(false);
+  const [visiblePanel, setVisiblePanel] = useState<"none" | "all" | "recommendations" | "before-after">("none");
 
   const handleSubmit = async (cfg: WorkloadConfig) => {
     setConfig(cfg);
@@ -56,6 +58,40 @@ const Index = () => {
               <span className="text-xs text-emerald-700 bg-emerald-100/60 border border-emerald-200 px-2 py-0.5 rounded">
                 Results from backend model
               </span>
+            )}
+
+            {/* Quick panel buttons: show only recommendations or before/after */}
+            {config && before && optimized && (
+              <>
+                <button
+                  onClick={() => setVisiblePanel("recommendations")}
+                  className={`ml-3 inline-flex items-center gap-2 rounded-md px-3 py-1 text-sm font-medium ${
+                    visiblePanel === "recommendations" ? "bg-primary text-white" : "bg-transparent text-primary border border-primary/20"
+                  }`}
+                  type="button"
+                >
+                  Recommendations
+                </button>
+
+                <button
+                  onClick={() => setVisiblePanel("before-after")}
+                  className={`ml-2 inline-flex items-center gap-2 rounded-md px-3 py-1 text-sm font-medium ${
+                    visiblePanel === "before-after" ? "bg-primary text-white" : "bg-transparent text-primary border border-primary/20"
+                  }`}
+                  type="button"
+                >
+                  Before vs After
+                </button>
+                {visiblePanel !== "all" && (
+                  <button
+                    onClick={() => setVisiblePanel("all")}
+                    className="ml-2 inline-flex items-center gap-2 rounded-md bg-muted px-2 py-1 text-xs font-medium text-foreground"
+                    type="button"
+                  >
+                    Show All
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -97,16 +133,41 @@ const Index = () => {
                   exit={{ opacity: 0 }}
                   className="space-y-6"
                 >
-                  <WorkloadPredictionChart predictions={predictions} />
+                  {before && optimized && (
+                    <WorkloadPredictionChart
+                      key={`pred-${predictions.length}-${predictions[0]?.predicted ?? 0}`}
+                      predictions={predictions}
+                    />
+                  )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <EnergySimulation result={before} label="⚡ Current Metrics" />
-                    <EnergySimulation result={optimized.result} label="🌱 Optimized Metrics" />
-                  </div>
+                  {before && optimized && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <EnergySimulation result={before} label="⚡ Current Metrics" />
+                      <EnergySimulation result={optimized.result} label="🌱 Optimized Metrics" />
+                    </div>
+                  )}
 
-                  <OptimizationPanel original={config} optimized={optimized} />
+                  {/* When visiblePanel is "none" we intentionally render no result panels until user clicks a header button */}
 
-                  <BeforeAfterDashboard before={before} after={optimized} />
+                  {visiblePanel === "all" && <OptimizationPanel original={config} optimized={optimized} />}
+
+                  {visiblePanel === "all" && (
+                    <BeforeAfterDashboard
+                      key={optimized ? `beforeafter-${optimized.result.energyKwh}-${optimized.result.co2Kg}` : "beforeafter-empty"}
+                      before={before}
+                      after={optimized}
+                    />
+                  )}
+
+                  {visiblePanel === "before-after" && (
+                    <BeforeAfterDashboard
+                      key={optimized ? `beforeafter-${optimized.result.energyKwh}-${optimized.result.co2Kg}` : "beforeafter-empty"}
+                      before={before}
+                      after={optimized}
+                    />
+                  )}
+
+                  {visiblePanel === "recommendations" && <OptimizationPanel original={config} optimized={optimized} />}
                 </motion.div>
               )}
             </AnimatePresence>

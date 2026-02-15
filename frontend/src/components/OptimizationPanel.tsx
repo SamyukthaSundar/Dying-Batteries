@@ -7,7 +7,7 @@ interface Props {
   optimized: OptimizedResult;
 }
 
-const OptimizationPanel = ({ original, optimized }: Props) => {
+export default function OptimizationPanel({ original, optimized }: Props) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -17,12 +17,15 @@ const OptimizationPanel = ({ original, optimized }: Props) => {
     >
       <div className="flex items-center gap-2 mb-4">
         <Lightbulb className="h-5 w-5 text-accent" />
-        <h2 className="text-lg font-semibold text-foreground">Optimization Recommendations</h2>
+        <h2 className="text-lg font-semibold text-foreground">
+          Optimization Recommendations
+        </h2>
       </div>
 
-      {/* Config comparison */}
       <div className="bg-secondary/50 rounded-lg p-4 border border-border mb-4">
-        <div className="text-xs text-muted-foreground mb-2">Configuration Change</div>
+        <div className="text-xs text-muted-foreground mb-2">
+          Configuration Change
+        </div>
         <div className="flex items-center gap-3 text-sm font-mono">
           <span className="text-destructive">
             {original.cpuCores} cores / {original.memoryGb}GB
@@ -34,7 +37,6 @@ const OptimizationPanel = ({ original, optimized }: Props) => {
         </div>
       </div>
 
-      {/* Recommendations */}
       <div className="space-y-2">
         {optimized.recommendations.map((rec, i) => (
           <motion.div
@@ -51,6 +53,4 @@ const OptimizationPanel = ({ original, optimized }: Props) => {
       </div>
     </motion.div>
   );
-};
-
-export default OptimizationPanel;
+}

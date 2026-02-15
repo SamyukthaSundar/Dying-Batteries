@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { Leaf, TrendingDown, Award } from "lucide-react";
+import { generateSummaryPdf } from "@/lib/pdf";
 import type { SimulationResult, OptimizedResult } from "@/lib/simulation";
 
 interface Props {
@@ -52,6 +54,7 @@ const GreenScoreMeter = ({ score }: { score: number }) => {
 };
 
 const BeforeAfterDashboard = ({ before, after }: Props) => {
+  // Use `generateSummaryPdf` in the shared lib instead of inline jsPDF here
   const chartData = [
     {
       name: "Energy (kWh/h)",
@@ -70,11 +73,23 @@ const BeforeAfterDashboard = ({ before, after }: Props) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.4 }}
+      id="before-after-dashboard"
       className="eco-card p-6"
     >
+      {/* trigger resize so Recharts ResponsiveContainer recalculates when `after` updates */}
+      <ResizeOnUpdate after={after} />
       <div className="flex items-center gap-2 mb-6">
         <Award className="h-5 w-5 text-accent" />
         <h2 className="text-lg font-semibold text-foreground">Before vs After</h2>
+        <div className="ml-auto">
+          <button
+            onClick={() => generateSummaryPdf(before, after)}
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-1 text-sm font-medium text-white hover:opacity-90"
+            type="button"
+          >
+            Download Summary
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -150,3 +165,19 @@ const BeforeAfterDashboard = ({ before, after }: Props) => {
 };
 
 export default BeforeAfterDashboard;
+
+function ResizeOnUpdate({ after }: { after: any }) {
+  useEffect(() => {
+    // small delay to allow layout to settle
+    const t = setTimeout(() => {
+      try {
+        window.dispatchEvent(new Event("resize"));
+      } catch (e) {
+        // ignore
+      }
+    }, 120);
+    return () => clearTimeout(t);
+  }, [after]);
+
+  return null;
+}

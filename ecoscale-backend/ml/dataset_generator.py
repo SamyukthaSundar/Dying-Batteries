@@ -76,20 +76,33 @@ def generate_optimization_dataset(rows=NUM_ROWS):
         cpu
         memory
     Target:
-        optimal_cpu
+        optimal_cpu (with realistic noise and variance)
     """
 
     traffic = np.random.randint(100, 5000, rows)
     cpu = np.random.randint(1, 16, rows)
     memory = np.random.randint(2, 64, rows)
 
-    # Ideal CPU estimation logic
-    optimal_cpu = np.ceil(traffic / 1200).astype(int)
+    # Base optimal CPU estimation
+    optimal_cpu = np.ceil(traffic / 1200).astype(float)
 
     # Add memory influence
-    optimal_cpu += (memory // 32)
+    optimal_cpu += (memory / 64.0)
 
+    # Add realistic variability:
+    # 1. Different teams/environments make different choices
+    # 2. Sometimes over-provision for safety (cost > performance)
+    # 3. Sometimes under-provision for cost savings
+    variability = np.random.normal(0, 0.3, rows)  # ±0.3 cores variability
+    optimal_cpu += variability
+
+    # Add interaction noise (not purely linear)
+    interaction_noise = (traffic / 5000) * np.random.normal(0, 0.15, rows)
+    optimal_cpu += interaction_noise
+
+    # Clip to valid range
     optimal_cpu = np.clip(optimal_cpu, 1, 16)
+    optimal_cpu = np.round(optimal_cpu, 1)  # Realistic fractional cores
 
     df = pd.DataFrame({
         "traffic": traffic,

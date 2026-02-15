@@ -36,7 +36,10 @@ def train_optimization_model():
     )
 
     model = RandomForestRegressor(
-        n_estimators=100,
+        n_estimators=30,              # Fewer trees to reduce overfitting
+        max_depth=8,                  # Shallower trees (was unlimited)
+        min_samples_split=20,         # Require more samples to split
+        min_samples_leaf=10,          # Require more samples in leaf nodes
         random_state=42,
         n_jobs=-1
     )
@@ -62,5 +65,3 @@ def train_optimization_model():
 
 if __name__ == "__main__":
     train_optimization_model()
-
-
