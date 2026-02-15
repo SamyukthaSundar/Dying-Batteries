@@ -17,7 +17,7 @@ const WorkloadPredictionChart = ({ predictions }: Props) => {
     >
       <div className="flex items-center gap-2 mb-4">
         <TrendingUp className="h-5 w-5 text-primary" />
-        <h2 className="text-lg font-semibold text-foreground">Workload Prediction (24h)</h2>
+        <h2 className="text-lg font-semibold text-foreground">Workload Prediction ({predictions.length}h)</h2>
       </div>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">

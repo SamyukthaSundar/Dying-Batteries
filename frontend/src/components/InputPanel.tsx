@@ -25,9 +25,10 @@ const InputPanel = ({ onSubmit }: InputPanelProps) => {
   const [cpuCores, setCpuCores] = useState(8);
   const [memoryGb, setMemoryGb] = useState(16);
   const [priority, setPriority] = useState<WorkloadConfig["priority"]>("balanced");
+  const [forecastHours, setForecastHours] = useState(24);
 
   const handleSubmit = () => {
-    onSubmit({ appType, trafficRps, cpuCores, memoryGb, priority });
+    onSubmit({ appType, trafficRps, cpuCores, memoryGb, priority, forecastHours });
   };
 
   return (
@@ -137,6 +138,22 @@ const InputPanel = ({ onSubmit }: InputPanelProps) => {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Forecast hours */}
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm">
+          <label className="text-muted-foreground flex items-center gap-1">Run Time (hours)</label>
+          <span className="text-primary font-mono">{forecastHours}h</span>
+        </div>
+        <input
+          type="range"
+          min={1}
+          max={168}
+          value={forecastHours}
+          onChange={(e) => setForecastHours(Number(e.target.value))}
+          className="w-full accent-primary h-1.5 bg-secondary rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
+        />
       </div>
 
       {/* Submit */}

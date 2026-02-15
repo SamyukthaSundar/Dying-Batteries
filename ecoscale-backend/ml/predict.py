@@ -37,26 +37,39 @@ opt_model = joblib.load(OPT_MODEL_PATH)
 # PREDICTION FUNCTIONS
 # ==========================
 
-def predict_utilization(traffic: int, cpu: int, memory: int) -> float:
+def predict_utilization(traffic: int, cpu: int, memory: int, app_type: str = "web") -> float:
     """
     Predict CPU utilization (returns value between 0.05 and 0.95).
+    Applies a small adjustment based on `app_type` so UI changes to Application Type affect results
+    even when models were trained without that categorical feature.
     """
     prediction = util_model.predict([[traffic, cpu, memory]])[0]
-    return max(0.05, min(float(prediction), 0.95))
+    # Base-load adjustments (front-end logic uses similar bases)
+    base_load = {"web": 0.3, "api": 0.4, "ml": 0.7}
+    base = float(base_load.get(app_type, 0.4))
+    # Scale prediction by ratio between app base and nominal 0.4
+    ratio = base / 0.4
+    adjusted = float(prediction) * ratio
+    return max(0.05, min(adjusted, 0.95))
 
 
-def predict_optimal_cpu(traffic: int, cpu: int, memory: int) -> int:
+def predict_optimal_cpu(traffic: int, cpu: int, memory: int, app_type: str = "web") -> int:
     """
     Predict optimal CPU allocation.
+    Apply a small adjustment based on `app_type` to reflect different workload characteristics.
     """
     prediction = opt_model.predict([[traffic, cpu, memory]])[0]
-    return max(1, int(round(prediction)))
+    base_load = {"web": 0.3, "api": 0.4, "ml": 0.7}
+    base = float(base_load.get(app_type, 0.4))
+    ratio = base / 0.4
+    adjusted = float(prediction) * ratio
+    return max(1, int(round(adjusted)))
 
 # ==========================
 # EXPLAINABLE AI SECTION
 # ==========================
 
-def explain_utilization(traffic: int, cpu: int, memory: int) -> dict:
+def explain_utilization(traffic: int, cpu: int, memory: int, app_type: str = "web") -> dict:
     """
     Returns SHAP explanation for a single utilization prediction.
     Output format:
@@ -100,7 +113,7 @@ def get_feature_importance() -> dict:
     return dict(zip(feature_names, [float(i) for i in importances]))
 
 
-def explain_optimal_cpu(traffic: int, cpu: int, memory: int) -> dict:
+def explain_optimal_cpu(traffic: int, cpu: int, memory: int, app_type: str = "web") -> dict:
     """
     Returns SHAP explanation for optimal CPU prediction.
     Output format:

@@ -18,7 +18,7 @@ import os
 # ==============================
 
 RANDOM_SEED = 42
-NUM_ROWS = 20000
+NUM_ROWS = 1000000
 DATA_FOLDER = "data"
 
 np.random.seed(RANDOM_SEED)

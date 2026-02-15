@@ -6,6 +6,8 @@ export interface WorkloadConfig {
   cpuCores: number;
   memoryGb: number;
   priority: "balanced" | "performance" | "green";
+  // Optional forecast length in hours for workload prediction (default 24)
+  forecastHours?: number;
 }
 
 export interface SimulationResult {

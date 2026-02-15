@@ -21,37 +21,39 @@ if os.path.exists(MODEL_PATH):
     timeseries_model = joblib.load(MODEL_PATH)
 
 
-def predict_24h_traffic(base_rps: int) -> List[int]:
+def predict_24h_traffic(base_rps: int, hours: int = 24) -> List[int]:
     """
-    Predict traffic for next 24 hours using ML model.
-    
+    Predict traffic for the next `hours` using ML model.
+
     Args:
         base_rps (int): Current traffic level (requests/sec)
-    
+        hours (int): Number of hours to predict (default 24)
+
     Returns:
-        List[int]: Predicted traffic for hours 0-23
+        List[int]: Predicted traffic for the next `hours` hours
     """
-    
+
     if timeseries_model is None:
         # Fallback if model not trained yet
-        return _fallback_24h_traffic(base_rps)
-    
+        # Use same fallback but allow custom length
+        return _fallback_24h_traffic(base_rps)[:hours] if hours <= 24 else _fallback_24h_traffic(base_rps) + [int(base_rps) for _ in range(hours - 24)]
+
     predictions = []
     now = datetime.now()
-    
-    for h in range(24):
+
+    for h in range(hours):
         future_time = now + timedelta(hours=h)
         hour_of_day = future_time.hour
         day_of_week = future_time.weekday()
-        
+
         # Predict traffic multiplier (0.1 - 2.0)
         multiplier = timeseries_model.predict([[hour_of_day, day_of_week]])[0]
         multiplier = max(0.1, min(multiplier, 2.0))  # Bound it
-        
+
         # Scale by base RPS
         traffic = max(0, int(base_rps * multiplier))
         predictions.append(traffic)
-    
+
     return predictions
 
 

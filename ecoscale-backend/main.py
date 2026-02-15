@@ -200,6 +200,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from ml.predict import predict_utilization, predict_optimal_cpu, explain_utilization, get_feature_importance
 from ml.predict_timeseries import predict_24h_traffic
+from datetime import datetime
 from simulation.energy_model import calculate_energy
 from simulation.carbon_model import calculate_carbon_emission
 
@@ -221,6 +222,8 @@ class WorkloadConfig(BaseModel):
     cpuCores: int
     memoryGb: int
     priority: Literal["balanced", "performance", "green"]
+    # Optional forecast length (hours) for workload prediction - default 24
+    forecastHours: int = 24
 
 
 class SimulationResult(BaseModel):
@@ -278,7 +281,7 @@ def calc_co2(energy_kwh: float, intensity: float = 0.475) -> float:
 
 def simulate_impl(cfg: WorkloadConfig) -> SimulationResult:
     # Use trained utilization model (returns 0..1)
-    util = float(predict_utilization(cfg.trafficRps, cfg.cpuCores, cfg.memoryGb))
+    util = float(predict_utilization(cfg.trafficRps, cfg.cpuCores, cfg.memoryGb, cfg.appType))
     energy_kwh = float(calculate_energy(cfg.cpuCores, util))
     co2_kg = float(calculate_carbon_emission(energy_kwh))
     cost_usd = round(energy_kwh * 0.12, 4)
@@ -298,7 +301,7 @@ def optimize_impl(cfg: WorkloadConfig) -> OptimizedResult:
     carbon_before = float(calculate_carbon_emission(energy_before))
 
     # ML model suggests optimal CPU allocation
-    recommended_cpu = int(predict_optimal_cpu(cfg.trafficRps, cfg.cpuCores, cfg.memoryGb))
+    recommended_cpu = int(predict_optimal_cpu(cfg.trafficRps, cfg.cpuCores, cfg.memoryGb, cfg.appType))
     if recommended_cpu < 1:
         recommended_cpu = 1
 
@@ -314,7 +317,7 @@ def optimize_impl(cfg: WorkloadConfig) -> OptimizedResult:
 
     # Get SHAP explanations for feature importance
     try:
-        util_explanation = explain_utilization(cfg.trafficRps, cfg.cpuCores, cfg.memoryGb)
+        util_explanation = explain_utilization(cfg.trafficRps, cfg.cpuCores, cfg.memoryGb, cfg.appType)
     except Exception as e:
         util_explanation = {}
         print(f"SHAP explanation error: {e}")
@@ -422,24 +425,32 @@ def optimize_impl(cfg: WorkloadConfig) -> OptimizedResult:
 
 def predict_workload_impl(cfg: WorkloadConfig) -> List[WorkloadPrediction]:
     """
-    Predict 24-hour workload using ML-trained time-series model.
+    Predict workload for a configurable number of hours using ML-trained time-series model.
     Uses learned patterns from historical traffic data.
     """
-    # Get ML-predicted traffic for next 24 hours
-    predicted_traffic_list = predict_24h_traffic(cfg.trafficRps)
-    
+    hours = max(1, min(int(cfg.forecastHours or 24), 168))  # cap at 168h (1 week)
+
+    # Get ML-predicted traffic for the requested number of hours
+    predicted_traffic_list = predict_24h_traffic(cfg.trafficRps, hours)
+
+    # Align labels/returned `hour` with the current local hour so the
+    # chart shows "next N hours from now" instead of 00:00-..
+    start_hour = datetime.now().hour
+
     predictions: List[WorkloadPrediction] = []
-    for h in range(24):
+    for h in range(hours):
         traffic = predicted_traffic_list[h]
-        # Add small prediction variance (±10%) for visualization
-        predicted = int(traffic * (1 + 0.05 * (h % 3 - 1)))
-        period = "Peak" if 8 <= h <= 20 else "Off-peak"
+        # Compute the actual hour this prediction corresponds to
+        hour_label = (start_hour + h) % 24
+        # Add small prediction variance for visualization
+        predicted = int(traffic * (1 + 0.05 * (hour_label % 3 - 1)))
+        period = "Peak" if 8 <= hour_label <= 20 else "Off-peak"
         predictions.append(
             WorkloadPrediction(
-                hour=h,
+                hour=hour_label,
                 traffic=max(0, traffic),
                 predicted=max(0, predicted),
-                label=f"{str(h).zfill(2)}:00 ({period})"
+                label=f"{str(hour_label).zfill(2)}:00 ({period})"
             )
         )
     return predictions
