@@ -22,6 +22,11 @@ MODEL_PATH = "models/optimization_model.pkl"
 def train_optimization_model():
 
     df = pd.read_csv(DATA_PATH)
+    # Remove exact duplicate rows to avoid data leakage between train/test
+    dup_count = len(df) - len(df.drop_duplicates())
+    if dup_count > 0:
+        print(f"Found and removing {dup_count} duplicate rows from dataset (prevents leakage)")
+        df = df.drop_duplicates()
 
     X = df[["traffic", "cpu", "memory"]]
     y = df["optimal_cpu"]
@@ -31,8 +36,12 @@ def train_optimization_model():
     )
 
     model = RandomForestRegressor(
-        n_estimators=100,
-        random_state=42
+        n_estimators=30,              # Fewer trees to reduce overfitting
+        max_depth=8,                  # Shallower trees (was unlimited)
+        min_samples_split=20,         # Require more samples to split
+        min_samples_leaf=10,          # Require more samples in leaf nodes
+        random_state=42,
+        n_jobs=-1
     )
 
     model.fit(X_train, y_train)

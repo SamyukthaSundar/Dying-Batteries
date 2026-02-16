@@ -2,3 +2,7 @@ scikit-learn
 pandas
 numpy
 joblib
+fastapi
+uvicorn[standard]
+prophet 
+shap
